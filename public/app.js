@@ -3,28 +3,30 @@ let STATUS_CONFIG = { default: 'ONLINE', overrides: {} };
 function updateRateLimit(res) {
     const limit = res.headers.get('x-ratelimit-limit');
     const remaining = res.headers.get('x-ratelimit-remaining');
-    const rlBadge = document.getElementById('rate-limit-badge');
-    if (rlBadge && limit && remaining) {
-        rlBadge.style.display = 'inline-block';
+    if (!limit || !remaining) return;
+
+    const badges = document.querySelectorAll('.rate-limit-status');
+    badges.forEach(badge => {
+        badge.style.display = 'inline-block';
         if (limit === 'UNLIMITED') {
-            rlBadge.textContent = `RATE LIMIT: UNLIMITED`;
-            rlBadge.style.background = 'var(--cyan)';
-            rlBadge.style.color = 'var(--black)';
+            badge.textContent = `RATE LIMIT: UNLIMITED`;
+            badge.style.background = 'var(--cyan)';
+            badge.style.color = 'var(--black)';
         } else {
-            rlBadge.textContent = `RATE LIMIT: ${remaining}/${limit}`;
+            badge.textContent = `RATE LIMIT: ${remaining}/${limit}`;
             const percent = (remaining / limit) * 100;
             if (percent <= 20) {
-                rlBadge.style.background = 'var(--red)';
-                rlBadge.style.color = 'var(--white)';
+                badge.style.background = 'var(--red)';
+                badge.style.color = 'var(--white)';
             } else if (percent <= 50) {
-                rlBadge.style.background = 'var(--orange)';
-                rlBadge.style.color = 'var(--black)';
+                badge.style.background = 'var(--orange)';
+                badge.style.color = 'var(--black)';
             } else {
-                rlBadge.style.background = 'var(--yellow)';
-                rlBadge.style.color = 'var(--black)';
+                badge.style.background = 'var(--yellow)';
+                badge.style.color = 'var(--black)';
             }
         }
-    }
+    });
 }
 
 async function initPortal() {
@@ -36,7 +38,7 @@ async function initPortal() {
         renderServers(spec.servers);
         renderEndpoints(spec.paths);
 
-        const badge = document.querySelector('.badge:not(.online)');
+        const badge = document.querySelector('.oas-badge');
         if (badge && spec.openapi) {
             badge.textContent = `OAS ${spec.openapi}`;
         }
@@ -220,6 +222,9 @@ function renderEndpoints(paths) {
                     </div>
                     <div class="op-content">
                         <div class="op-inner">
+                            <div style="display: flex; justify-content: flex-end; margin-bottom: 5px;">
+                                <span class="badge rate-limit-status" style="background: var(--yellow); color: var(--black); font-size: 0.7rem; padding: 4px 8px;">RATE LIMIT: ...</span>
+                            </div>
                             <p class="op-desc">${details.description || 'No description provided.'}</p>
                             ${renderParams(details.parameters)}
                             ${hasBody ? `<textarea class="body-input" placeholder='{ "key": "value" }'>${getMethodExampleById(details.operationId)}</textarea>` : ''}
