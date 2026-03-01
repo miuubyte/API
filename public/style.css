@@ -601,7 +601,7 @@ footer {
 
     .header-meta {
         margin-top: 10px;
-        justify-content: center;
+        justify-content: flex-start;
     }
 
     .info-box {
