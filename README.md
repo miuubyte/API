@@ -144,7 +144,7 @@ API/
 
 ## LICENSE
 
-Proyek ini dilisensikan di bawah **MIT License**. Lihat file [LICENSE.md](LICENSE.md) untuk detail selengkapnya.
+Proyek ini dilisensikan di bawah **MIT License**. Lihat file [LICENSE](LICENSE) untuk detail selengkapnya.
 
 ---
 
