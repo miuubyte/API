@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YeMo | NEO-SWAGGER PREM</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;700;900&family=JetBrains+Mono:wght@800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="top-bar">
+            <div class="logo" data-text="YE-MO.API">YE-MO.API</div>
+            <div class="header-meta">
+                <span class="badge">v1.0.0</span>
+                <span class="badge online">ONLINE</span>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <h1>NEO-SWAGGER PORTAL</h1>
+            <p>About Simple and easy to use API. ⭐️ Star to support our work!</p>
+            <div class="header-meta">
+                <span class="badge">OAS 3.0.0</span>
+                <a href="/docs" class="docs-link">VIEW /docs</a>
+            </div>
+        </div>
+
+        <div class="servers-box">
+            <label>SERVERS</label>
+            <select id="server-select" aria-label="Select Server"></select>
+        </div>
+
+        <div class="controls">
+            <div class="section-header">Endpoints</div>
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="SEARCH..." oninput="filterEndpoints(this.value)">
+            </div>
+        </div>
+
+        <div id="endpoint-list"></div>
+    </div>
+
+    <footer>
+        <div class="footer-logo">YEMO.IO</div>
+        <div class="footer-links">
+            <a href="/docs">Docs</a>
+            <a href="https://github.com/yemo-dev">Github</a>
+            <a href="https://whatsapp.com/channel/0029VbCIHXZBvvsnjAL2gK0q">Support</a>
+        </div>
+        <div class="footer-copy">Pure Data. No Fluff. &copy; 2026 INFRASTRUCTURE</div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

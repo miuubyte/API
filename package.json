@@ -1,0 +1,24 @@
+{
+    "name": "api",
+    "version": "1.0.0",
+    "description": "About Simple and easy to use API. ⭐️ Star to support our work!",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/yemo-dev/API.git"
+    },
+    "type": "module",
+    "main": "src/index.js",
+    "scripts": {
+        "start": "node src/index.js",
+        "dev": "npm run kill-port && node --watch src/index.js",
+        "dev:cluster": "npm run kill-port && node --watch src/index.js --cluster",
+        "kill-port": "node src/utils/killPort.js"
+    },
+    "dependencies": {
+        "@hono/node-server": "1.19.9",
+        "@hono/zod-openapi": "^1.2.1",
+        "hono": "4.11.9",
+        "zod": "^4.3.6"
+    }
+}
