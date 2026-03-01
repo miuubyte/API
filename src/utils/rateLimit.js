@@ -5,7 +5,7 @@ const clients = new Map()
 const config = {
     windowMs: 15 * 60 * 1000,
     max: 100,
-    whitelist: [],
+    whitelist: ['127.0.0.1'],
     banList: ['']
 }
 
@@ -23,6 +23,8 @@ export const rateLimiter = () => {
         }
 
         if (config.whitelist.includes(ip)) {
+            c.header('X-RateLimit-Limit', 'UNLIMITED')
+            c.header('X-RateLimit-Remaining', 'UNLIMITED')
             await next()
             return
         }

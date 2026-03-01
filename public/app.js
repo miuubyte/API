@@ -332,17 +332,21 @@ async function execute(path, method, status, btn) {
                 rlBadge.style.display = 'inline-block';
                 rlBadge.textContent = `RATE LIMIT: ${remaining}/${limit}`;
 
-                // Change color based on remaining
-                const percent = (remaining / limit) * 100;
-                if (percent <= 20) {
-                    rlBadge.style.background = 'var(--red)';
-                    rlBadge.style.color = 'var(--white)';
-                } else if (percent <= 50) {
-                    rlBadge.style.background = 'var(--orange)';
+                if (remaining === 'UNLIMITED') {
+                    rlBadge.style.background = 'var(--green)';
                     rlBadge.style.color = 'var(--black)';
                 } else {
-                    rlBadge.style.background = 'var(--yellow)';
-                    rlBadge.style.color = 'var(--black)';
+                    const percent = (parseInt(remaining) / parseInt(limit)) * 100;
+                    if (percent <= 20) {
+                        rlBadge.style.background = 'var(--red)';
+                        rlBadge.style.color = 'var(--white)';
+                    } else if (percent <= 50) {
+                        rlBadge.style.background = 'var(--orange)';
+                        rlBadge.style.color = 'var(--black)';
+                    } else {
+                        rlBadge.style.background = 'var(--yellow)';
+                        rlBadge.style.color = 'var(--black)';
+                    }
                 }
             }
         }
