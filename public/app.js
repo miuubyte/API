@@ -234,8 +234,12 @@ function renderEndpoints(paths) {
                             </div>
                             <div class="response-box" style="position: relative;">
                                 <div class="res-header">JSON RESPONSE</div>
+                                <div class="filter-wrapper" style="margin-bottom: 10px; display: flex; gap: 5px;">
+                                    <input type="text" class="filter-input" placeholder="Filter path... (e.g. data.user.name)" style="flex: 1; background: var(--black); color: var(--yellow); border: 2px solid var(--black); padding: 5px 10px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; box-shadow: 2px 2px 0 var(--cyan);">
+                                    <button class="copy-btn" onclick="filterJsonResponse(this)" style="background: var(--yellow); color: var(--black); border: 2px solid var(--black); padding: 5px 10px; font-size: 0.8rem; font-weight: 800; cursor: pointer; box-shadow: 2px 2px 0 var(--magenta); text-transform: uppercase;">Filter</button>
+                                </div>
                                 <button class="copy-btn" onclick="copyResponse(this)" style="position: absolute; top: 10px; right: 10px; background: var(--cyan); color: var(--black); border: 2px solid var(--black); padding: 5px 10px; font-size: 0.8rem; font-weight: 800; cursor: pointer; box-shadow: 2px 2px 0 var(--magenta); text-transform: uppercase;">Copy</button>
-                                <a href="${path}" target="_blank" class="direct-link">${method.toUpperCase()} ${path.toUpperCase()}</a>
+                                <a href="${path}" target="_blank" class="direct-link" style="word-break: break-all;">${method.toUpperCase()} ${path.toUpperCase()}</a>
                                 <pre></pre>
                             </div>
                         </div>
@@ -365,6 +369,9 @@ async function execute(path, method, status, btn) {
         }
 
         container.style.display = 'block';
+        /* Store original data for filtering */
+        container.dataset.originalData = typeof data === 'object' ? JSON.stringify(data) : null;
+
         if (typeof data === 'object') {
             pre.innerHTML = syntaxHighlight(data);
         } else {
@@ -465,6 +472,38 @@ function shareApi(path, btn) {
             btn.style.color = '#fff';
         }, 2000);
     });
+}
+
+function filterJsonResponse(btn) {
+    const wrapper = btn.closest('.response-box');
+    const input = wrapper.querySelector('.filter-input');
+    const pre = wrapper.querySelector('pre');
+    const path = input.value.trim();
+
+    if (!wrapper.dataset.originalData) {
+        showToast('EXECUTE API FIRST TO GET DATA', 'error');
+        return;
+    }
+
+    try {
+        const fullData = JSON.parse(wrapper.dataset.originalData);
+        if (!path) {
+            pre.innerHTML = syntaxHighlight(fullData);
+            return;
+        }
+
+        /* Resolve nested keys */
+        const result = path.split('.').reduce((obj, key) => (obj && obj[key] !== undefined) ? obj[key] : undefined, fullData);
+
+        if (result !== undefined) {
+            pre.innerHTML = typeof result === 'object' ? syntaxHighlight(result) : `<span class="string">"${result}"</span>`;
+            showToast('FILTER APPLIED', 'success');
+        } else {
+            showToast('PATH NOT FOUND', 'error');
+        }
+    } catch (e) {
+        showToast('FILTER FAILED', 'error');
+    }
 }
 
 initPortal();

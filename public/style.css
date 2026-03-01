@@ -34,10 +34,12 @@ body {
 }
 
 .container {
-    max-width: 1000px;
+    max-width: 1200px;
     margin: 0 auto;
     width: 100%;
     flex: 1;
+    padding: 0 10px;
+    /* Add padding for small screens */
 }
 
 .top-bar {
@@ -207,9 +209,17 @@ body {
     box-shadow: 6px 6px 0 var(--black);
     margin-bottom: 2rem;
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    /* Mobile first column */
+    align-items: flex-start;
     gap: 1rem;
-    flex-wrap: wrap;
+}
+
+@media (min-width: 768px) {
+    .servers-box {
+        flex-direction: row;
+        align-items: center;
+    }
 }
 
 .servers-box label {
@@ -352,8 +362,10 @@ body {
 
 .path {
     font-family: 'JetBrains Mono', monospace;
-    font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+    font-size: clamp(0.7rem, 2vw, 1.1rem);
     font-weight: 800;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .summary {
@@ -507,8 +519,12 @@ pre {
     font-size: 0.85rem;
     overflow-x: auto;
     white-space: pre-wrap;
+    word-break: break-all;
     line-height: 1.4;
     margin-top: 0.5rem;
+    background: #111;
+    padding: 1rem;
+    border: 2px solid var(--black);
 }
 
 footer {
@@ -557,10 +573,15 @@ footer {
 }
 
 @media (max-width: 768px) {
+    body {
+        padding: 0.5rem;
+    }
+
     .top-bar {
         padding: 1rem;
         flex-direction: column;
-        align-items: flex-start;
+        align-items: center;
+        text-align: center;
     }
 
     .logo {
@@ -569,6 +590,11 @@ footer {
 
     .header-meta {
         margin-top: 10px;
+        justify-content: center;
+    }
+
+    .info-box {
+        padding: 1.5rem 1rem;
     }
 
     .op-sum {
@@ -580,12 +606,12 @@ footer {
     }
 
     .method {
-        font-size: 0.8rem;
-        padding: 4px 8px;
+        font-size: 0.7rem;
+        padding: 4px 6px;
     }
 
     .path {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         white-space: normal;
         word-break: break-all;
         flex: 1 1 100%;
@@ -608,12 +634,33 @@ footer {
 
     .controls {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: stretch;
         gap: 1rem;
+    }
+
+    .section-header {
+        font-size: 1.4rem;
+        text-align: center;
     }
 
     .search-input {
         width: 100%;
+    }
+
+    .op-content {
+        padding: 0 0.8rem;
+    }
+
+    .op-content.active {
+        padding: 1.2rem 0.8rem;
+    }
+
+    .params-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .filter-wrapper {
+        flex-direction: column;
     }
 }
 
