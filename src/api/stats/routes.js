@@ -4,7 +4,7 @@ import os from 'os'
 export const statsRoute = createRoute({
     method: 'get',
     path: '/api/stats',
-    tags: ['stats'],
+    tags: ['server'],
     description: 'Get detailed server system information (CPU, RAM, OS, etc)',
     'x-status': 'ONLINE',
     responses: {

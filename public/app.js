@@ -476,19 +476,100 @@ async function execute(path, method, status, btn) {
         }
 
         let data;
-        const contentType = res.headers.get("content-type");
-        if (contentType && contentType.indexOf("application/json") !== -1) {
+        let isBinary = false;
+        const contentType = res.headers.get("content-type") || "";
+
+        if (contentType.includes("application/json")) {
             data = await res.json();
+        } else if (contentType.startsWith("image/") || contentType.startsWith("video/") || contentType.startsWith("audio/")) {
+            data = await res.blob();
+            isBinary = true;
         } else {
             data = await res.text();
         }
 
         container.style.display = 'block';
-        /* Ensure clean JSON storage for filtering */
-        container.setAttribute('data-original', typeof data === 'object' ? JSON.stringify(data) : JSON.stringify({ response: data }));
 
-        if (typeof data === 'object') {
+        /* Store original data for filtering (skip for binary blobs) */
+        if (!isBinary) {
+            container.setAttribute('data-original', typeof data === 'object' ? JSON.stringify(data) : JSON.stringify({ response: data }));
+        }
+
+        if (typeof data === 'object' && !isBinary) {
+            /* Show JSON-specific UI elements */
+            const resHeader = container.querySelector('.res-header');
+            const resControls = container.querySelector('.res-controls');
+            if (resHeader) resHeader.style.display = 'flex';
+            if (resControls) resControls.style.display = 'flex';
+
             pre.innerHTML = syntaxHighlight(data);
+
+            /* Render Media Preview if available (Single or Multi) */
+            if (data.result) {
+                const results = Array.isArray(data.result) ? data.result : [data.result];
+
+                if (results.length > 0 && results[0].url && results[0].type) {
+                    let previewHtml = '<div class="media-preview-container" style="margin-top: 20px; border: 4px solid var(--black); box-shadow: 6px 6px 0 var(--black); background: var(--white); padding: 10px; display: flex; flex-direction: column; gap: 15px; overflow: hidden;">';
+
+                    results.forEach((item, index) => {
+                        const { url, type } = item;
+                        if (!url || !type) return;
+
+                        previewHtml += `<div class="media-item" style="border-bottom: ${index < results.length - 1 ? '2px solid #eee' : 'none'}; padding-bottom: ${index < results.length - 1 ? '15px' : '0'};">`;
+
+                        if (type === 'image') {
+                            previewHtml += `<img src="${url}" alt="Preview" style="width: 100%; height: auto; display: block; filter: contrast(110%);">`;
+                        } else if (type === 'video') {
+                            previewHtml += `<video src="${url}" controls style="width: 100%; display: block; background: #000;"></video>`;
+                        } else if (type === 'audio') {
+                            previewHtml += `<div style="padding: 20px; background: var(--black); color: var(--yellow); text-align: center;">
+                                                <div style="margin-bottom: 15px; font-weight: 900; letter-spacing: 1px;">AUDIO ASSET DETECTED</div>
+                                                <audio src="${url}" controls style="width: 100%;"></audio>
+                                            </div>`;
+                        }
+
+                        previewHtml += '</div>';
+                    });
+
+                    previewHtml += '</div>';
+
+                    /* Remove existing preview if any */
+                    const oldPreview = container.querySelector('.media-preview-container');
+                    if (oldPreview) oldPreview.remove();
+
+                    /* Append new preview after the pre tag */
+                    pre.insertAdjacentHTML('afterend', previewHtml);
+                }
+            }
+        } else if (isBinary) {
+            const blobUrl = URL.createObjectURL(data);
+
+            /* Hide JSON-specific UI elements */
+            const resHeader = container.querySelector('.res-header');
+            const resControls = container.querySelector('.res-controls');
+            if (resHeader) resHeader.style.display = 'none';
+            if (resControls) resControls.style.display = 'none';
+
+            pre.innerHTML = `<div style="padding: 20px; background: var(--black); color: var(--white); text-align: center; font-weight: 800; font-size: 0.9em; letter-spacing: 1px;">DIRECT BINARY ${contentType.toUpperCase()} DETECTED</div>`;
+
+            let previewHtml = '<div class="media-preview-container" style="margin-top: 20px; border: 4px solid var(--black); box-shadow: 6px 6px 0 var(--black); background: var(--white); padding: 10px; display: flex; flex-direction: column; gap: 15px; overflow: hidden;">';
+            previewHtml += '<div class="media-item">';
+
+            if (contentType.startsWith('image/')) {
+                previewHtml += `<img src="${blobUrl}" style="width: 100%; height: auto; display: block; filter: contrast(110%);">`;
+            } else if (contentType.startsWith('video/')) {
+                previewHtml += `<video src="${blobUrl}" controls style="width: 100%; display: block; background: #000;"></video>`;
+            } else if (contentType.startsWith('audio/')) {
+                previewHtml += `<audio src="${blobUrl}" controls style="width: 100%;"></audio>`;
+            }
+
+            previewHtml += '</div></div>';
+
+            /* Remove existing preview if any */
+            const oldPreview = container.querySelector('.media-preview-container');
+            if (oldPreview) oldPreview.remove();
+
+            pre.insertAdjacentHTML('afterend', previewHtml);
         } else {
             pre.textContent = data;
         }

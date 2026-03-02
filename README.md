@@ -65,7 +65,8 @@ npm run dev
 
 | Method | Endpoint | Description | Status Config |
 | :--- | :--- | :--- | :--- |
-| `GET` | **/api/stats** | System CPU, RAM, Network info. | `x-status` |
+| GET | /api/stats | System CPU, RAM, Network info. | x-status |
+| GET | /api/random/blue-archive | Random Blue Archive image URL. | x-status |
 
 > *Check endpoint status availability in their respective route files.*
 
@@ -89,37 +90,70 @@ We take security seriously. This API includes a robust protection layer within `
 
 ### Adding a New Endpoint
 
- We use a specific pattern to ensure **Offline/Online** status checks work automatically.
+We use a specific pattern to ensure **Offline/Online** status checks and **Media Previews** work automatically.
 
 **1. Create Route File**
 `src/api/example/routes.js`
 
 ```javascript
 import { createRoute, z } from '@hono/zod-openapi'
+import { MediaSchema } from '../../utils/media.js'
 
 export const myRoute = createRoute({
     method: 'get',
     path: '/api/example',
-    description: 'My cool endpoint',
-    'x-status': 'ONLINE', // Config Status Here
-    responses: { ... }
+    description: 'My cool media endpoint',
+    'x-status': 'ONLINE', 
+    'x-auto-media': true, // MAGIC FLAG: Automates JSON structure & previews
+    responses: {
+        200: {
+            content: {
+                'application/json': {
+                    schema: MediaSchema // Use standardized media schema
+                }
+            },
+            description: 'Success'
+        }
+    }
 })
 
-export const myHandler = (c) => c.json({ hello: 'world' })
-```
-
-**2. Register in `src/api/index.js`**
-> **IMPORTANT:** Add your route and handler to the `setupRoutes` function.
-
-```javascript
-import { myRoute, myHandler } from './example/routes.js'
-import { register } from '../utils/route.js'
-
-export const setupRoutes = (app) => {
-    // ... existing registers
-    register(app, myRoute, myHandler)
+export const myHandler = async (c) => {
+    // Just return the URL string! 
+    // The framework handles status, formatting, and type detection.
+    return "https://example.com/image.jpg"
 }
 ```
+
+### Auto-Docs & Media Support
+
+By setting `'x-auto-media': true` in your route:
+
+- **Multi-Media Support**: If you return an array of URLs, the framework automatically formats each one and the portal renders a gallery of previews.
+- **Automatic Detection**: It uses `getMediaType` internally to detect if each asset is an `image`, `video`, or `audio`.
+- **Portal Previews**: The API Portal renders specialized players or viewers for every detected media asset in the response.
+
+**If `'x-auto-media': false` (or omitted):**
+
+- The framework still wraps string returns into a basic JSON object: `{ status: 'success', url: YOUR_STRING }`.
+- **Note**: This mode does **NOT** show a media preview in the portal as it lacks the specialized `result` structure.
+
+### Direct Binary Support
+
+Endpoints can now return raw binary data (images, videos, etc.) directly.
+
+- **Frontend Handling**: The API portal automatically detects binary `Content-Type` and renders a premium preview using `Blob` objects.
+- **UI Logic**: When binary data is displayed, JSON-specific controls (Filter/Copy) are automatically hidden for a cleaner experience.
+- **BA API Example**: `GET /api/ba/blue-archive` returns a direct image buffer.
+
+### Direct Link / Redirect
+
+Need to use the API directly in an `<img>` or `<video>` tag? Just add the `redirect=true` query parameter.
+
+**Usage:**
+`GET /api/ba/blue-archive?redirect=true`
+
+- **Behavior**: The API will return a **302 Redirect** directly to the raw media file.
+- **Limitation**: If the endpoint returns multiple results, it will redirect to the first item.
 
 ---
 
@@ -131,9 +165,10 @@ API/
 │   └── errors/       # Custom 403, 404, 429, 500 Pages
 ├── src/
 │   ├── api/          # Route Logic
+│   │   ├── ba/       # Blue Archive assets
 │   │   ├── stats/    # Stats endpoint logic
 │   │   └── index.js  # Centralized Route Setup
-│   ├── utils/        # Security & Helpers (RateLimit, Logger)
+│   ├── utils/        # Security & Helpers (RateLimit, Logger, Media)
 │   └── index.js      # Main Entry Point (Server & Cluster)
 └── package.json
 ```
