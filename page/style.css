@@ -39,7 +39,6 @@ body {
     width: 100%;
     flex: 1;
     padding: 0 10px;
-    /* Add padding for small screens */
 }
 
 .top-bar {
@@ -309,7 +308,6 @@ body {
     box-shadow: 6px 6px 0px var(--black);
     transition: 0.1s;
     overflow: visible;
-    /* Changed from hidden to show res-header shadow */
 }
 
 .tag-group-content {
@@ -332,7 +330,6 @@ body {
     cursor: pointer;
     border-bottom: 3px solid var(--black);
     min-height: 50px;
-    /* Ensure consistent height */
 }
 
 .op-sum:hover {
@@ -535,7 +532,7 @@ pre {
     min-height: 100px;
 }
 
-/* --- FOOTER GENERATION 3: THE FINAL REFINEMENT --- */
+/* FOOTER */
 .footer-g3 {
     width: 100%;
     margin-top: 8rem;
@@ -703,7 +700,7 @@ pre {
     color: var(--white);
 }
 
-/* --- G3 RESPONSIVE ENGINE --- */
+/* RESPONSIVE */
 
 @media (max-width: 1100px) {
     .g3-main-content {
@@ -791,7 +788,6 @@ pre {
         padding: 12px 10px;
         display: flex;
         flex-direction: row;
-        /* Keep row but wrap if needed */
         flex-wrap: wrap;
         gap: 8px;
         align-items: center;
@@ -966,7 +962,7 @@ pre {
     background: var(--cyan);
 }
 
-/* Syntax Highlighting */
+/* SYNTAX */
 .string {
     color: var(--green);
 }
@@ -991,7 +987,7 @@ pre {
     font-weight: bold;
 }
 
-/* Loading Animation */
+/* LOADING */
 .glitch-loading {
     animation: loadingGlitch 0.3s infinite;
     background: var(--magenta) !important;
@@ -1026,4 +1022,72 @@ pre {
 
 .hidden {
     display: none !important;
+}
+
+/* RATE LIMIT LOCK */
+body.rate-limited {
+    overflow: hidden !important;
+}
+
+@keyframes glitch-fade {
+    0% {
+        opacity: 0;
+        transform: scale(1.1) rotate(2deg);
+    }
+
+    50% {
+        opacity: 0.8;
+        transform: scale(0.95) rotate(-1deg);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1) rotate(-1deg);
+    }
+}
+
+.glitch-text {
+    animation: text-glitch 0.2s linear infinite;
+}
+
+@keyframes text-glitch {
+    0% {
+        transform: translate(0);
+        text-shadow: 2px 2px var(--magenta), -2px -2px var(--cyan);
+    }
+
+    25% {
+        transform: translate(2px, -1px);
+        text-shadow: -2px 1px var(--magenta), 2px -1px var(--cyan);
+    }
+
+    50% {
+        transform: translate(-1px, 2px);
+        text-shadow: 1px -2px var(--magenta), -1px 2px var(--cyan);
+    }
+
+    75% {
+        transform: translate(1px, 1px);
+        text-shadow: 2px -1px var(--magenta), -2px 1px var(--cyan);
+    }
+
+    100% {
+        transform: translate(0);
+    }
+}
+
+.lock-card {
+    animation: card-entry 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes card-entry {
+    from {
+        opacity: 0;
+        transform: translateY(50px) rotate(10deg);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) rotate(-1deg);
+    }
 }

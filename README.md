@@ -78,11 +78,11 @@ We take security seriously. This API includes a robust protection layer within `
 
 | System | Default Config | Effect on Breach |
 | :--- | :--- | :--- |
-| **Rate Limiter** | `100 req` / `15 min` | **429** Neo-Brutalist Page |
+| **Rate Limiter** | `100 req` / `10 min` | **429** Neo-Brutalist Page |
 | **IP Whitelist** | Unlimited Access | Bypasses all limits |
 | **IP Ban List** | Permanent Block | **403** Access Denied Page |
 
-> **UI Note:** Error pages are located in `public/errors/` and feature a custom premium design.
+> **UI Note:** Error pages are located in `page/status/` and feature a custom premium design.
 
 ---
 
@@ -104,12 +104,12 @@ export const myRoute = createRoute({
     path: '/api/example',
     description: 'My cool media endpoint',
     'x-status': 'ONLINE', 
-    'x-auto-media': true, // MAGIC FLAG: Automates JSON structure & previews
+    'x-auto-media': true, /* magic flag */
     responses: {
         200: {
             content: {
                 'application/json': {
-                    schema: MediaSchema // Use standardized media schema
+                    schema: MediaSchema /* standardized schema */
                 }
             },
             description: 'Success'
@@ -118,8 +118,7 @@ export const myRoute = createRoute({
 })
 
 export const myHandler = async (c) => {
-    // Just return the URL string! 
-    // The framework handles status, formatting, and type detection.
+    /* auto wrapper */
     return "https://example.com/image.jpg"
 }
 ```
@@ -159,10 +158,10 @@ Need to use the API directly in an `<img>` or `<video>` tag? Just add the `redir
 
 ## PROJECT STRUCTURE
 
-```
+```text
 API/
-├── public/
-│   └── errors/       # Custom 403, 404, 429, 500 Pages
+├── page/
+│   └── status/       # Custom 403, 404, 429, 500 Pages
 ├── src/
 │   ├── api/          # Route Logic
 │   │   ├── ba/       # Blue Archive assets

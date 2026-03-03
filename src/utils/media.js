@@ -1,10 +1,6 @@
 import { z } from '@hono/zod-openapi';
 import mime from 'mime-types';
 
-/**
- * Standardized Zod schema for media responses.
- * Used for automatic documentation in OpenAPI.
- */
 export const MediaSchema = z.object({
     status: z.string().openapi({ example: 'success' }),
     result: z.union([
@@ -19,10 +15,6 @@ export const MediaSchema = z.object({
     ])
 });
 
-/**
- * Advanced utility for media type detection using mime-types.
- * Supports a vast range of industrial file formats.
- */
 export const getMediaType = (url) => {
     if (!url || typeof url !== 'string') return 'unknown';
 
@@ -36,10 +28,6 @@ export const getMediaType = (url) => {
     return 'unknown';
 };
 
-/**
- * Wraps raw data into a standardized media response object.
- * Supports passing a single URL string, an object, or an array of URLs/objects.
- */
 export const wrapMedia = (data) => {
     const formatItem = (item) => {
         const url = typeof item === 'string' ? item : item.url;

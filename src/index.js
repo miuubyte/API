@@ -33,10 +33,12 @@ if (isCluster && cluster.isPrimary) {
     const app = new OpenAPIHono()
 
     app.use('*', secureHeaders())
-    app.use('*', cors())
+    app.use('*', cors({
+        exposeHeaders: ['X-RateLimit-Limit', 'X-RateLimit-Remaining']
+    }))
     app.use('*', logApiRequest)
-    app.use('*', rateLimiter())
     app.use('*', prettyPrint)
+    app.use('/api/*', rateLimiter())
 
     setupRoutes(app)
 
@@ -52,23 +54,20 @@ if (isCluster && cluster.isPrimary) {
 
     app.doc('/docs', openApiConfig)
 
-    app.get('/static/*', serveStatic({ root: './' }))
-    app.get('/', serveStatic({ path: './public/index.html' }))
-    app.get('/style.css', serveStatic({ path: './public/style.css' }))
-    app.get('/app.js', serveStatic({ path: './public/app.js' }))
+    app.use('*', serveStatic({ root: './page' }))
 
     app.notFound(async (c) => {
-        if (c.req.path.startsWith('/api/') || c.req.path === '/docs') {
+        if (c.req.path.startsWith('/api/') || c.req.path === '/docs' || c.req.header('accept')?.includes('json')) {
             return c.json({
+                success: false,
+                status: 404,
                 error: 'Not Found',
-                message: 'The requested API endpoint does not exist.',
-                path: c.req.path,
-                status: 404
+                message: `Route ${c.req.method} ${c.req.path} not found.`
             }, 404)
         }
 
         try {
-            const html = await readFile('./public/errors/404.html', 'utf8')
+            const html = await readFile('./page/status/404.html', 'utf8')
             return c.html(html, 404)
         } catch (e) {
             return c.text('404 Not Found', 404)
@@ -77,20 +76,16 @@ if (isCluster && cluster.isPrimary) {
 
     app.onError(async (err, c) => {
         logger.error(`[Error] ${err.message}`)
-        if (c.req.path.startsWith('/api/')) {
+        if (c.req.path.startsWith('/api/') || c.req.header('accept')?.includes('json')) {
             return c.json({
+                success: false,
+                status: 500,
                 error: 'Internal Server Error',
-                message: err.message,
-                status: 500
+                message: err.message || 'An unexpected error occurred.'
             }, 500)
         }
 
-        try {
-            const html = await readFile('./public/errors/500.html', 'utf8')
-            return c.html(html, 500)
-        } catch (e) {
-            return c.text('Internal Server Error', 500)
-        }
+        return c.text('Internal Server Error', 500)
     })
 
     const port = process.env.PORT || 3000

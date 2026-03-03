@@ -3,23 +3,26 @@ import { readFile } from 'node:fs/promises'
 const clients = new Map()
 
 const config = {
-    windowMs: 15 * 60 * 1000,
+    windowMs: 10 * 60 * 1000,
     max: 100,
-    whitelist: ['127.0.0.1'],
+    whitelist: ['127.0.0.1', '::1', '::ffff:127.0.0.1'],
     banList: ['']
 }
 
 export const rateLimiter = () => {
     return async (c, next) => {
-        const ip = c.req.header('x-forwarded-for') || '127.0.0.1'
+        const ip = c.req.header('x-forwarded-for')?.split(',')[0] ||
+            c.req.header('x-real-ip') ||
+            c.env?.incoming?.socket?.remoteAddress ||
+            '127.0.0.1'
 
         if (config.banList.includes(ip)) {
-            try {
-                const html = await readFile('./public/errors/403.html', 'utf8')
-                return c.html(html, 403)
-            } catch (e) {
-                return c.text('Forbidden', 403)
-            }
+            return c.json({
+                success: false,
+                status: 403,
+                error: 'Forbidden',
+                message: 'Your IP has been banned from accessing this API.'
+            }, 403)
         }
 
         if (config.whitelist.includes(ip)) {
@@ -32,33 +35,55 @@ export const rateLimiter = () => {
         const now = Date.now()
 
         if (!clients.has(ip)) {
-            clients.set(ip, { count: 1, resetTime: now + config.windowMs })
+            /* status detection */
+            clients.set(ip, { count: c.req.method === 'HEAD' ? 0 : 1, resetTime: now + config.windowMs })
         } else {
             const client = clients.get(ip)
             if (now > client.resetTime) {
-                clients.set(ip, { count: 1, resetTime: now + config.windowMs })
+                clients.set(ip, { count: c.req.method === 'HEAD' ? 0 : 1, resetTime: now + config.windowMs })
             } else {
-                client.count++
+                if (c.req.method !== 'HEAD') {
+                    client.count++
+                }
+
                 if (client.count > config.max) {
-                    c.header('X-RateLimit-Limit', config.max)
-                    c.header('X-RateLimit-Remaining', 0)
-                    try {
-                        const retryAfter = Math.ceil((client.resetTime - now) / 1000);
-                        c.header('Retry-After', retryAfter.toString());
-                        let html = await readFile('./public/errors/429.html', 'utf8');
-                        html = html.replace(/{{RETRY_AFTER}}/g, retryAfter.toString());
-                        return c.html(html, 429);
-                    } catch (e) {
-                        return c.text('Too Many Requests', 429);
+                    const retryAfter = Math.ceil((client.resetTime - now) / 1000);
+                    c.header('X-RateLimit-Limit', config.max.toString())
+                    c.header('X-RateLimit-Remaining', '0')
+                    c.header('Retry-After', retryAfter.toString());
+
+                    const formatTime = (s) => {
+                        const h = Math.floor(s / 3600);
+                        const m = Math.floor((s % 3600) / 60);
+                        const sec = s % 60;
+                        const parts = [];
+                        if (h > 0) parts.push(`${h} hours`);
+                        if (m > 0) parts.push(`${m} minutes`);
+                        if (sec > 0 || parts.length === 0) parts.push(`${sec} seconds`);
+                        return parts.join(', ');
+                    };
+
+                    const timeStr = formatTime(retryAfter);
+
+                    if (c.req.path.startsWith('/api/') || c.req.header('accept')?.includes('json')) {
+                        return c.json({
+                            success: false,
+                            status: 429,
+                            error: 'Too Many Requests',
+                            message: `Rate limit exceeded. Please try again in ${timeStr}.`,
+                            retryAfter
+                        }, 429);
                     }
+
+                    return c.text(`Too Many Requests. Retry after ${timeStr}.`, 429);
                 }
             }
         }
 
         const clientData = clients.get(ip)
         if (clientData) {
-            c.header('X-RateLimit-Limit', config.max)
-            c.header('X-RateLimit-Remaining', Math.max(0, config.max - clientData.count))
+            c.header('X-RateLimit-Limit', config.max.toString())
+            c.header('X-RateLimit-Remaining', Math.max(0, config.max - clientData.count).toString())
         }
 
         await next()

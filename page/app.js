@@ -1,9 +1,15 @@
 let STATUS_CONFIG = { default: 'ONLINE', overrides: {} };
 
-function updateRateLimit(res) {
-    const limit = res.headers.get('x-ratelimit-limit');
-    const remaining = res.headers.get('x-ratelimit-remaining');
+window.updateRateLimit = function (res, directLimit, directRemaining) {
+    const limit = directLimit || res?.headers?.get('x-ratelimit-limit');
+    const remaining = directRemaining || res?.headers?.get('x-ratelimit-remaining');
     if (!limit || !remaining) return;
+
+    /* state cache */
+    window.lastRateLimit = { limit, remaining };
+
+    const isLocked = limit !== 'UNLIMITED' && parseInt(remaining) === 0;
+    window.setGlobalLock(isLocked);
 
     const badges = document.querySelectorAll('.rate-limit-status');
     badges.forEach(badge => {
@@ -14,8 +20,13 @@ function updateRateLimit(res) {
             badge.style.color = 'var(--black)';
         } else {
             badge.textContent = `RATE LIMIT: ${remaining}/${limit}`;
-            const percent = (remaining / limit) * 100;
-            if (percent <= 20) {
+            const percent = (parseInt(remaining) / parseInt(limit)) * 100;
+            if (percent === 0) {
+                badge.style.background = 'var(--red)';
+                badge.style.color = 'var(--white)';
+                badge.textContent = `RATE LIMIT: EXCEEDED!`;
+                badge.classList.add('glitch-text');
+            } else if (percent <= 20) {
                 badge.style.background = 'var(--red)';
                 badge.style.color = 'var(--white)';
             } else if (percent <= 50) {
@@ -29,10 +40,73 @@ function updateRateLimit(res) {
     });
 }
 
+window.setGlobalLock = function (locked) {
+    const buttons = document.querySelectorAll('.try-btn');
+    const overlay = document.getElementById('rate-limit-overlay');
+
+    if (locked) {
+        document.body.classList.add('rate-limited');
+        buttons.forEach(btn => {
+            if (btn.textContent === 'Execute') {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                btn.style.cursor = 'not-allowed';
+                btn.textContent = 'LOCKED';
+            }
+        });
+
+        if (!overlay) {
+            const div = document.createElement('div');
+            div.id = 'rate-limit-overlay';
+            div.innerHTML = `
+                <div class="lock-card" style="background: var(--red); color: var(--white); padding: 3rem 2rem; border: 8px solid var(--black); box-shadow: 20px 20px 0 var(--black); text-align: center; max-width: 90%; width: 550px; position: relative; z-index: 10001; transform: rotate(-1.5deg); display: flex; flex-direction: column; gap: 2rem; animation: card-entry 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                    <button onclick="window.setGlobalLock(false)" style="position: absolute; top: -30px; right: -30px; background: var(--yellow); color: var(--black); border: 5px solid var(--black); width: 65px; height: 65px; font-weight: 900; cursor: pointer; font-size: 2.2rem; box-shadow: 8px 8px 0 var(--black); transition: 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; align-items: center; justify-content: center; clip-path: polygon(10% 0, 90% 0, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0 90%, 0 10%);" onmouseover="this.style.transform='scale(1.1) rotate(90deg)'; this.style.background='var(--magenta)'; this.style.color='white'" onmouseout="this.style.transform='scale(1) rotate(0deg)'; this.style.background='var(--yellow)'; this.style.color='black'">✕</button>
+                    <h1 style="font-size: clamp(2.5rem, 12vw, 4rem); margin: 0; text-transform: uppercase; font-weight: 900; line-height: 0.85; letter-spacing: -3px; text-shadow: 4px 4px 0 var(--black);">ACCESS<br>LOCKED</h1>
+                    <p style="font-size: 1.3rem; margin: 0; font-weight: 700; color: rgba(255,255,255,0.95); line-height: 1.5; text-transform: uppercase;">Your API access is temporarily suspended.<br><span style="color: var(--yellow); background: var(--black); padding: 2px 8px;">Wait for cooldown or upgrade plan.</span></p>
+                    <div style="background: var(--black); color: var(--green); padding: 18px; font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; border: 4px solid var(--white); font-weight: 800; box-shadow: 10px 10px 0 rgba(0,0,0,0.5); letter-spacing: 2px; text-transform: uppercase;">STATUS: COOLDOWN_ACTIVE</div>
+                </div>
+            `;
+            div.style.position = 'fixed';
+            div.style.top = '0';
+            div.style.left = '0';
+            div.style.width = '100vw';
+            div.style.height = '100vh';
+            div.style.background = 'rgba(0,0,0,0.85)';
+            div.style.backdropFilter = 'blur(12px)';
+            div.style.display = 'flex';
+            div.style.alignItems = 'center';
+            div.style.justifyContent = 'center';
+            div.style.zIndex = '10000';
+            div.style.animation = 'glitch-fade 0.3s ease-out';
+            document.body.appendChild(div);
+        }
+    } else {
+        document.body.classList.remove('rate-limited');
+        buttons.forEach(btn => {
+            if (btn.textContent === 'LOCKED') {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                btn.textContent = 'Execute';
+            }
+        });
+        if (overlay) overlay.remove();
+    }
+}
+
 async function initPortal() {
     try {
+        /* rate limit detection */
+        fetch('/api/stats', { method: 'HEAD' })
+            .then(res => {
+                window.updateRateLimit(res);
+                if (window.lastRateLimit) {
+                    window.updateRateLimit(null, window.lastRateLimit.limit, window.lastRateLimit.remaining);
+                }
+            })
+            .catch(() => { });
+
         const docsRes = await fetch('/docs');
-        updateRateLimit(docsRes);
         const spec = await docsRes.json();
 
         renderServers(spec.servers);
@@ -47,7 +121,7 @@ async function initPortal() {
         document.getElementById('endpoint-list').innerHTML = `<div class="op-block" style="padding:2rem; background:var(--yellow)">ERROR LOADING SPEC: ${e.message}</div>`;
     }
 
-    /* Load Last Search Query */
+    /* load last search query */
     const lastQuery = localStorage.getItem('lastQuery');
     if (lastQuery) {
         const searchInput = document.querySelector('.search-input');
@@ -57,7 +131,7 @@ async function initPortal() {
         }
     }
 
-    /* Handle deep linking from URL Hash */
+    /* handle hash route */
     handleHashRoute();
     window.addEventListener('hashchange', handleHashRoute);
 }
@@ -66,10 +140,9 @@ function handleHashRoute() {
     const hash = window.location.hash;
     if (!hash || hash.length < 2) return;
 
-    /* Format: #/api/stats?someparam=value */
     const [pathPart, queryPart] = hash.substring(1).split('?');
 
-    /* Handle #/method/path or just #/path */
+    /* hash route detection */
     let methodPart = null;
     let effectivePath = pathPart;
 
@@ -166,7 +239,6 @@ function showToast(message, type = 'info') {
     toast.style.fontFamily = "'Space Grotesk', sans-serif";
     toast.textContent = message;
 
-    /* Slide-in animation */
     toast.style.transform = 'translateY(100px)';
     toast.style.opacity = '0';
     toast.style.transition = 'all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
@@ -340,7 +412,6 @@ function renderParams(params) {
 function toggle(el) {
     const isNowActive = el.classList.contains('active');
 
-    /* Close all other open endpoints */
     document.querySelectorAll('.op-sum.active').forEach(openSum => {
         if (openSum !== el) {
             openSum.classList.remove('active');
@@ -348,7 +419,6 @@ function toggle(el) {
         }
     });
 
-    /* Toggle the clicked one */
     if (!isNowActive) {
         el.classList.add('active');
         el.nextElementSibling.classList.add('active');
@@ -361,24 +431,20 @@ function toggle(el) {
 function filterEndpoints(query) {
     const q = query.toLowerCase();
 
-    /* Filter visibility for endpoint blocks */
     document.querySelectorAll('.op-block').forEach(block => {
         const text = block.innerText.toLowerCase();
         block.classList.toggle('hidden', !text.includes(q));
     });
 
-    /* Handle Category visibility */
     document.querySelectorAll('.tag-group-content').forEach(content => {
         const header = content.previousElementSibling;
         const hasVisible = content.querySelector('.op-block:not(.hidden)') !== null;
 
         if (q === '') {
-            /* Restore everything if search is cleared */
             header.classList.remove('hidden');
         } else {
             if (hasVisible) {
                 header.classList.remove('hidden');
-                /* Automatically expand category if match found during search */
                 content.style.display = 'block';
                 const arrow = header.querySelector('.cat-arrow');
                 if (arrow) arrow.style.transform = 'rotate(0deg)';
@@ -457,7 +523,6 @@ async function execute(path, method, status, btn) {
         const duration = Math.round(performance.now() - startTime);
         updateRateLimit(res);
 
-        /* Update Latency Badge */
         const latencyBadge = container.querySelector('.latency-badge');
         if (latencyBadge) {
             latencyBadge.textContent = `${duration}ms`;
@@ -490,13 +555,11 @@ async function execute(path, method, status, btn) {
 
         container.style.display = 'block';
 
-        /* Store original data for filtering (skip for binary blobs) */
         if (!isBinary) {
             container.setAttribute('data-original', typeof data === 'object' ? JSON.stringify(data) : JSON.stringify({ response: data }));
         }
 
         if (typeof data === 'object' && !isBinary) {
-            /* Show JSON-specific UI elements */
             const resHeader = container.querySelector('.res-header');
             const resControls = container.querySelector('.res-controls');
             if (resHeader) resHeader.style.display = 'flex';
@@ -504,7 +567,6 @@ async function execute(path, method, status, btn) {
 
             pre.innerHTML = syntaxHighlight(data);
 
-            /* Render Media Preview if available (Single or Multi) */
             if (data.result) {
                 const results = Array.isArray(data.result) ? data.result : [data.result];
 
@@ -533,18 +595,15 @@ async function execute(path, method, status, btn) {
 
                     previewHtml += '</div>';
 
-                    /* Remove existing preview if any */
                     const oldPreview = container.querySelector('.media-preview-container');
                     if (oldPreview) oldPreview.remove();
 
-                    /* Append new preview after the pre tag */
                     pre.insertAdjacentHTML('afterend', previewHtml);
                 }
             }
         } else if (isBinary) {
             const blobUrl = URL.createObjectURL(data);
 
-            /* Hide JSON-specific UI elements */
             const resHeader = container.querySelector('.res-header');
             const resControls = container.querySelector('.res-controls');
             if (resHeader) resHeader.style.display = 'none';
@@ -565,7 +624,6 @@ async function execute(path, method, status, btn) {
 
             previewHtml += '</div></div>';
 
-            /* Remove existing preview if any */
             const oldPreview = container.querySelector('.media-preview-container');
             if (oldPreview) oldPreview.remove();
 
@@ -614,7 +672,6 @@ function copyText(text, btn, originalText) {
         }, 2000);
         showToast('COPIED TO CLIPBOARD', 'success');
     }).catch(() => {
-        /* Fallback for older browsers or non-https */
         const textArea = document.createElement("textarea");
         textArea.value = text;
         document.body.appendChild(textArea);
@@ -714,7 +771,6 @@ function filterJsonResponse(btn) {
             return;
         }
 
-        /* Access nested nested properties */
         const keys = path.split('.');
         let result = fullData;
         for (const key of keys) {
@@ -750,8 +806,8 @@ function toggleFavorite(path, method, event) {
         showToast('ADDED TO FAVORITES', 'success');
     }
     localStorage.setItem('favorites', JSON.stringify(favorites));
-    /* Reload to update the FAVORITES group */
-    location.reload();
+    /* reload favorited group */
+    renderEndpoints(spec.paths);
 }
 
 function getFavorites() {
@@ -766,7 +822,6 @@ function toggleSnippets(btn, path, method) {
     const wrapper = btn.closest('.op-inner');
     const snippetBox = wrapper.querySelector('.snippet-box');
     if (snippetBox.style.display === 'none') {
-        /* Generate content */
         const queryParams = Array.from(wrapper.querySelectorAll('.params-grid .param-input')).map(input => {
             return `${input.placeholder}=${encodeURIComponent(input.value)}`;
         }).join('&');
@@ -777,18 +832,15 @@ function toggleSnippets(btn, path, method) {
         const baseUrl = server.endsWith('/') ? server.slice(0, -1) : server;
         const fullUrl = `${baseUrl}${finalPath}`;
 
-        /* curl */
         let curl = `curl -X ${method.toUpperCase()} "${fullUrl}"`;
         if (bodyValue) curl += ` \\\n  -H "Content-Type: application/json" \\\n  -d '${bodyValue}'`;
         snippetBox.querySelector('.curl-code').textContent = curl;
 
-        /* fetch */
         let fetchCode = `fetch("${fullUrl}", {\n  method: "${method.toUpperCase()}"`;
         if (bodyValue) fetchCode += `,\n  headers: { "Content-Type": "application/json" },\n  body: JSON.stringify(${bodyValue})`;
         fetchCode += `\n}).then(res => res.json()).then(console.log);`;
         snippetBox.querySelector('.fetch-code').textContent = fetchCode;
 
-        /* python */
         let python = `import requests\n\nurl = "${fullUrl}"\nresponse = requests.${method.toLowerCase()}(url`;
         if (bodyValue) python += `, json=${bodyValue}`;
         python += `)\nprint(response.json())`;

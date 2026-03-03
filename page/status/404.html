@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>429 | RATE LIMIT EXCEEDED</title>
+    <title>404 | NOT FOUND</title>
     <link
         href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;700;900&family=JetBrains+Mono:wght@800&display=swap"
         rel="stylesheet">
@@ -16,6 +16,10 @@
             --red: #FF2E2E;
             --purple: #B24BF3;
             --cyan: #00F0FF;
+
+            --main-color: var(--yellow);
+            --shadow-color: var(--purple);
+            --accent-color: var(--cyan);
         }
 
         * {
@@ -46,10 +50,10 @@
             font-size: clamp(6rem, 20vw, 15rem);
             font-weight: 900;
             line-height: 0.8;
-            color: var(--yellow);
+            color: var(--main-color);
             text-shadow:
-                8px 8px 0 var(--red),
-                -8px -8px 0 var(--cyan);
+                8px 8px 0 var(--shadow-color),
+                -8px -8px 0 var(--accent-color);
             position: relative;
             display: inline-block;
             animation: float 3s ease-in-out infinite;
@@ -68,7 +72,7 @@
             position: relative;
             display: inline-block;
             transform: rotate(-3deg);
-            box-shadow: 6px 6px 0 var(--red);
+            box-shadow: 6px 6px 0 var(--main-color);
         }
 
         .desc {
@@ -85,24 +89,24 @@
             margin-top: 2.5rem;
             display: inline-block;
             background: transparent;
-            color: var(--cyan);
-            border: 3px solid var(--cyan);
+            color: var(--main-color);
+            border: 3px solid var(--main-color);
             padding: 1rem 2.5rem;
             font-weight: 800;
             font-family: 'JetBrains Mono', monospace;
             text-decoration: none;
             font-size: 1.1rem;
             text-transform: uppercase;
-            box-shadow: 5px 5px 0 var(--cyan);
+            box-shadow: 5px 5px 0 var(--main-color);
             transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
 
         .btn:hover {
             transform: translate(-3px, -3px);
-            box-shadow: 8px 8px 0 var(--yellow);
-            border-color: var(--yellow);
-            color: var(--yellow);
-            background: #222;
+            box-shadow: 8px 8px 0 var(--white);
+            border-color: var(--white);
+            color: var(--bg);
+            background: var(--white);
         }
 
         .overlay {
@@ -130,42 +134,39 @@
                 transform: translateY(-20px);
             }
         }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 1.5rem;
+            }
+
+            .error-code {
+                font-size: clamp(5rem, 18vw, 10rem);
+            }
+
+            .desc {
+                font-size: 1rem;
+            }
+
+            .btn {
+                padding: 0.8rem 2rem;
+                font-size: 1rem;
+            }
+        }
     </style>
 </head>
 
 <body>
     <div class="overlay"></div>
     <div class="container">
-        <div class="error-code">429</div>
+        <div class="error-code">404</div>
         <br>
-        <div class="glitch-text">SYSTEM OVERLOADED</div>
+        <div class="glitch-text">PAGE NOT FOUND</div>
         <p class="desc">
-            Kamu terlalu cepat! Server butuh istirahat sejenak.<br>
-            Coba lagi dalam <span id="timer" style="color: var(--yellow); font-weight: 900;">--</span> detik.
+            Ups! Halaman yang kamu cari tidak ditemukan.<br>
+            Mungkin sudah dihapus atau kamu salah ketik.
         </p>
-        <a href="/" class="btn" id="retry-btn" style="opacity: 0.5; pointer-events: none;">COOLDOWN_ACTIVE</a>
-
-        <script>
-            let seconds = parseInt("{{RETRY_AFTER}}") || 60;
-            const timerEl = document.getElementById('timer');
-            const btnEl = document.getElementById('retry-btn');
-
-            function updateTimer() {
-                timerEl.textContent = seconds;
-                if (seconds <= 0) {
-                    timerEl.parentElement.innerHTML = "Rate limit sudah direset! Silakan coba lagi.";
-                    btnEl.style.opacity = "1";
-                    btnEl.style.pointerEvents = "auto";
-                    btnEl.textContent = "RETRY_NOW()";
-                    btnEl.style.background = "var(--cyan)";
-                    btnEl.style.color = "var(--bg)";
-                    return;
-                }
-                seconds--;
-                setTimeout(updateTimer, 1000);
-            }
-            updateTimer();
-        </script>
+        <a href="/" class="btn">PORTAL HOME</a>
     </div>
 </body>
 
