@@ -5,16 +5,20 @@ const clients = new Map()
 const config = {
     windowMs: 10 * 60 * 1000,
     max: 100,
-    whitelist: ['127.0.0.1', '::1', '::ffff:127.0.0.1'],
-    banList: ['']
+    whitelist: [],
+    banList: ['127.0.0.1']
 }
 
 export const rateLimiter = () => {
     return async (c, next) => {
-        const ip = c.req.header('x-forwarded-for')?.split(',')[0] ||
+        let ip = c.req.header('x-forwarded-for')?.split(',')[0] ||
             c.req.header('x-real-ip') ||
             c.env?.incoming?.socket?.remoteAddress ||
             '127.0.0.1'
+
+        /* Normalize localhost */
+        if (ip === '::1') ip = '127.0.0.1'
+        if (ip.startsWith('::ffff:')) ip = ip.replace('::ffff:', '')
 
         if (config.banList.includes(ip)) {
             if (c.req.path.startsWith('/api/') || c.req.header('accept')?.includes('json')) {
@@ -37,6 +41,12 @@ export const rateLimiter = () => {
         if (config.whitelist.includes(ip)) {
             c.header('X-RateLimit-Limit', 'UNLIMITED')
             c.header('X-RateLimit-Remaining', 'UNLIMITED')
+            await next()
+            return
+        }
+
+        /* Skip counter for non-api routes */
+        if (!c.req.path.startsWith('/api/')) {
             await next()
             return
         }
