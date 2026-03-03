@@ -38,7 +38,7 @@ if (isCluster && cluster.isPrimary) {
     }))
     app.use('*', logApiRequest)
     app.use('*', prettyPrint)
-    app.use('/api/*', rateLimiter())
+    app.use('*', rateLimiter())
 
     setupRoutes(app)
 
