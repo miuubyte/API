@@ -3,7 +3,21 @@ let PORTAL_SPEC = null;
 
 function normalizeBaseUrl(url) {
     if (!url || typeof url !== 'string') return '';
-    return url.trim().replace(/\/+$/, '');
+    const trimmed = url.trim();
+    if (!trimmed) return '';
+
+    let parsed;
+    try {
+        parsed = new URL(trimmed);
+    } catch {
+        return '';
+    }
+
+    const protocol = parsed.protocol.toLowerCase();
+    if (protocol !== 'http:' && protocol !== 'https:') return '';
+    parsed.hash = '';
+
+    return parsed.toString().replace(/\/+$/, '');
 }
 
 function getApiBaseUrl() {
@@ -28,7 +42,10 @@ function getApiBaseUrl() {
 }
 
 function buildApiUrl(path) {
-    return `${getApiBaseUrl()}${path.startsWith('/') ? path : `/${path}`}`;
+    if (!path || typeof path !== 'string') return getApiBaseUrl();
+    const trimmedPath = path.trim();
+    if (!trimmedPath) return getApiBaseUrl();
+    return `${getApiBaseUrl()}${trimmedPath.startsWith('/') ? trimmedPath : `/${trimmedPath}`}`;
 }
 
 window.updateRateLimit = function (res, directLimit, directRemaining) {
@@ -298,8 +315,17 @@ function showToast(message, type = 'info') {
 function renderServers(servers) {
     const select = document.getElementById('server-select');
     const apiBase = getApiBaseUrl();
+    /* Fallback is used when OpenAPI spec has no `servers` (or malformed) so portal still works. */
     const safeServers = Array.isArray(servers) && servers.length > 0 ? servers : [{ url: apiBase, description: 'Configured API Server' }];
-    select.innerHTML = safeServers.map(s => `<option value="${s.url}">${s.url} - ${s.description || ''}</option>`).join('');
+    select.textContent = '';
+
+    safeServers.forEach((s) => {
+        const safeUrl = normalizeBaseUrl(String(s?.url ?? '')) || apiBase;
+        const option = document.createElement('option');
+        option.value = safeUrl;
+        option.textContent = `${safeUrl} - ${String(s?.description || '')}`;
+        select.appendChild(option);
+    });
 }
 
 function getStatusColor(status) {
