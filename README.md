@@ -78,6 +78,33 @@ Access the API Portal at: **<http://localhost:3000>**
 
 ---
 
+## GitHub Pages Hosting (Portal Only)
+
+This repository includes a GitHub Actions workflow to deploy the `page/` portal to GitHub Pages.
+
+### Enable Deployment
+
+1. Go to **Settings → Pages** in your repository.
+2. Set **Source** to **GitHub Actions**.
+3. Push changes to `main` (or run the workflow manually).
+
+### Configure API URL
+
+Because GitHub Pages is static hosting, the API server still needs to run separately.
+
+You can point the portal to your API using one of these methods:
+
+- Set `window.API_BASE_URL` in `page/config.js`
+- Or open the portal with query param:
+
+```text
+https://<user>.github.io/<repo>/?api=https://your-api-domain.com
+```
+
+The query parameter takes priority and is saved in local storage.
+
+---
+
 ## Security Configuration
 
 Configuration is managed centrally within the `src/utils/rateLimit.js` utility.

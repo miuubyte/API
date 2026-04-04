@@ -1,4 +1,35 @@
 let STATUS_CONFIG = { default: 'ONLINE', overrides: {} };
+let PORTAL_SPEC = null;
+
+function normalizeBaseUrl(url) {
+    if (!url || typeof url !== 'string') return '';
+    return url.trim().replace(/\/+$/, '');
+}
+
+function getApiBaseUrl() {
+    const queryApi = new URLSearchParams(window.location.search).get('api');
+    if (queryApi) {
+        const normalized = normalizeBaseUrl(queryApi);
+        if (normalized) {
+            localStorage.setItem('apiBaseUrl', normalized);
+            return normalized;
+        }
+    }
+
+    const storedApi = localStorage.getItem('apiBaseUrl');
+    if (storedApi) return normalizeBaseUrl(storedApi);
+
+    if (typeof window !== 'undefined' && window.API_BASE_URL) {
+        const configured = normalizeBaseUrl(window.API_BASE_URL);
+        if (configured) return configured;
+    }
+
+    return normalizeBaseUrl(window.location.origin);
+}
+
+function buildApiUrl(path) {
+    return `${getApiBaseUrl()}${path.startsWith('/') ? path : `/${path}`}`;
+}
 
 window.updateRateLimit = function (res, directLimit, directRemaining) {
     const limit = directLimit || res?.headers?.get('x-ratelimit-limit');
@@ -96,8 +127,14 @@ window.setGlobalLock = function (locked) {
 
 async function initPortal() {
     try {
+        const apiBase = getApiBaseUrl();
+
+        document.querySelectorAll('.docs-link[href="/docs"]').forEach(link => {
+            link.href = `${apiBase}/docs`;
+        });
+
         /* rate limit detection */
-        fetch('/api/stats', { method: 'HEAD' })
+        fetch(buildApiUrl('/api/stats'), { method: 'HEAD' })
             .then(res => {
                 window.updateRateLimit(res);
                 if (window.lastRateLimit) {
@@ -106,8 +143,9 @@ async function initPortal() {
             })
             .catch(() => { });
 
-        const docsRes = await fetch('/docs');
+        const docsRes = await fetch(buildApiUrl('/docs'));
         const spec = await docsRes.json();
+        PORTAL_SPEC = spec;
 
         renderServers(spec.servers);
         renderEndpoints(spec.paths);
@@ -118,7 +156,7 @@ async function initPortal() {
         }
 
     } catch (e) {
-        document.getElementById('endpoint-list').innerHTML = `<div class="op-block" style="padding:2rem; background:var(--yellow)">ERROR LOADING SPEC: ${e.message}</div>`;
+        document.getElementById('endpoint-list').innerHTML = `<div class="op-block" style="padding:2rem; background:var(--yellow)">ERROR LOADING SPEC: ${e.message}. Add ?api=https://your-api-domain on URL or set API_BASE_URL in page/config.js</div>`;
     }
 
     /* load last search query */
@@ -259,7 +297,9 @@ function showToast(message, type = 'info') {
 
 function renderServers(servers) {
     const select = document.getElementById('server-select');
-    select.innerHTML = servers.map(s => `<option value="${s.url}">${s.url} - ${s.description || ''}</option>`).join('');
+    const apiBase = getApiBaseUrl();
+    const safeServers = Array.isArray(servers) && servers.length > 0 ? servers : [{ url: apiBase, description: 'Configured API Server' }];
+    select.innerHTML = safeServers.map(s => `<option value="${s.url}">${s.url} - ${s.description || ''}</option>`).join('');
 }
 
 function getStatusColor(status) {
@@ -807,7 +847,9 @@ function toggleFavorite(path, method, event) {
     }
     localStorage.setItem('favorites', JSON.stringify(favorites));
     /* reload favorited group */
-    renderEndpoints(spec.paths);
+    if (PORTAL_SPEC?.paths) {
+        renderEndpoints(PORTAL_SPEC.paths);
+    }
 }
 
 function getFavorites() {
@@ -862,7 +904,7 @@ function switchSnippet(btn, type) {
 }
 
 function downloadSpec() {
-    const server = document.getElementById('server-select').value;
+    const server = document.getElementById('server-select')?.value || getApiBaseUrl();
     const url = server.endsWith('/') ? server + 'docs' : server + '/docs';
     fetch(url).then(res => {
         if (!res.ok) throw new Error();
