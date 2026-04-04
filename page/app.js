@@ -173,7 +173,14 @@ async function initPortal() {
         }
 
     } catch (e) {
-        document.getElementById('endpoint-list').innerHTML = `<div class="op-block" style="padding:2rem; background:var(--yellow)">ERROR LOADING SPEC: ${e.message}. Add ?api=https://your-api-domain on URL or set API_BASE_URL in page/config.js</div>`;
+        const endpointList = document.getElementById('endpoint-list');
+        endpointList.textContent = '';
+        const errorBox = document.createElement('div');
+        errorBox.className = 'op-block';
+        errorBox.style.padding = '2rem';
+        errorBox.style.background = 'var(--yellow)';
+        errorBox.textContent = `ERROR LOADING SPEC: ${e?.message || 'Unknown error'}. Add ?api=https://your-api-domain on URL or set API_BASE_URL in page/config.js`;
+        endpointList.appendChild(errorBox);
     }
 
     /* load last search query */
