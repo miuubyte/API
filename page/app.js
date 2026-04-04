@@ -31,7 +31,11 @@ function getApiBaseUrl() {
     }
 
     const storedApi = localStorage.getItem('apiBaseUrl');
-    if (storedApi) return normalizeBaseUrl(storedApi);
+    if (storedApi) {
+        const normalizedStored = normalizeBaseUrl(storedApi);
+        if (normalizedStored) return normalizedStored;
+        localStorage.removeItem('apiBaseUrl');
+    }
 
     if (window.API_BASE_URL) {
         const configured = normalizeBaseUrl(window.API_BASE_URL);
@@ -327,12 +331,20 @@ function renderServers(servers) {
     select.textContent = '';
 
     safeServers.forEach((s) => {
-        const safeUrl = normalizeBaseUrl(s?.url) || apiBase;
+        const safeUrl = normalizeBaseUrl(s?.url);
+        if (!safeUrl) return;
         const option = document.createElement('option');
         option.value = safeUrl;
         option.textContent = `${safeUrl} - ${String(s?.description || '')}`;
         select.appendChild(option);
     });
+
+    if (!select.options.length) {
+        const option = document.createElement('option');
+        option.value = apiBase;
+        option.textContent = `${apiBase} - Configured API Server`;
+        select.appendChild(option);
+    }
 }
 
 function getStatusColor(status) {
