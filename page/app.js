@@ -33,7 +33,7 @@ function getApiBaseUrl() {
     const storedApi = localStorage.getItem('apiBaseUrl');
     if (storedApi) return normalizeBaseUrl(storedApi);
 
-    if (typeof window !== 'undefined' && window.API_BASE_URL) {
+    if (window.API_BASE_URL) {
         const configured = normalizeBaseUrl(window.API_BASE_URL);
         if (configured) return configured;
     }
@@ -327,7 +327,7 @@ function renderServers(servers) {
     select.textContent = '';
 
     safeServers.forEach((s) => {
-        const safeUrl = normalizeBaseUrl(String(s?.url ?? '')) || apiBase;
+        const safeUrl = normalizeBaseUrl(s?.url) || apiBase;
         const option = document.createElement('option');
         option.value = safeUrl;
         option.textContent = `${safeUrl} - ${String(s?.description || '')}`;
