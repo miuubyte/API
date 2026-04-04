@@ -37,8 +37,8 @@ function getApiBaseUrl() {
         localStorage.removeItem('apiBaseUrl');
     }
 
-    if (window.API_BASE_URL) {
-        const configured = normalizeBaseUrl(window.API_BASE_URL);
+    if (window.PORTAL_CONFIG?.apiBaseUrl) {
+        const configured = normalizeBaseUrl(window.PORTAL_CONFIG.apiBaseUrl);
         if (configured) return configured;
     }
 
@@ -183,7 +183,7 @@ async function initPortal() {
         errorBox.className = 'op-block';
         errorBox.style.padding = '2rem';
         errorBox.style.background = 'var(--yellow)';
-        errorBox.textContent = `ERROR LOADING SPEC: ${e?.message || 'Unknown error'}. Add ?api=https://your-api-domain on URL or set API_BASE_URL in page/config.js`;
+        errorBox.textContent = `ERROR LOADING SPEC: ${e?.message || 'Unknown error'}. Add ?api=https://your-api-domain.com on URL or set PORTAL_CONFIG.apiBaseUrl in page/config.js`;
         endpointList.appendChild(errorBox);
     }
 

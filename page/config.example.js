@@ -1,1 +1,3 @@
-window.API_BASE_URL = 'https://your-api-domain.com';
+window.PORTAL_CONFIG = Object.freeze({
+    apiBaseUrl: 'https://your-api-domain.com'
+});

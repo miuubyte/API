@@ -1,1 +1,3 @@
-window.API_BASE_URL = '';
+window.PORTAL_CONFIG = Object.freeze({
+    apiBaseUrl: ''
+});

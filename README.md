@@ -94,7 +94,7 @@ Because GitHub Pages is static hosting, the API server still needs to run separa
 
 You can point the portal to your API using one of these methods:
 
-- Set `window.API_BASE_URL` in `page/config.js`
+- Set `window.PORTAL_CONFIG.apiBaseUrl` in `page/config.js`
 - Or open the portal with query param:
 
 ```text
