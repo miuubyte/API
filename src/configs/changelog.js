@@ -26,7 +26,6 @@ export const changelogConfig = {
             changes: [
                 '[+] Status indicator in header showing server up/down',
                 '[+] Changelog modal with version history',
-                '[+] .env support for sensitive configuration',
                 '[+] Per-endpoint rate limiting',
                 '[+] API key expiry and scope permissions',
                 '[+] Auto IP ban on threshold exceeded',

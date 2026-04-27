@@ -1,6 +1,6 @@
 {
     "name": "miuu-api",
-    "version": "1.0.0",
+    "version": "1.2.0",
     "description": "MiuuAPI: A high-performance, modular API gateway and server infrastructure built for modern web services.",
     "keywords": [
         "hono",
