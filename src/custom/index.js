@@ -8,25 +8,26 @@ const ICONS = {
 
 export function buildBrandingScript() {
   const sponsorCSS = `
-    .sponsor-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 100000; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.4s ease; pointer-events: none; }
-    .sponsor-modal-overlay.show { opacity: 1; pointer-events: auto; }
-    .sponsor-modal { width: 90%; max-width: 600px; background: var(--scalar-background-1); border: 1px solid var(--scalar-border-color); border-radius: 12px; overflow: hidden; transform: scale(0.95) translateY(20px); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); font-family: var(--scalar-font); }
-    .sponsor-modal-overlay.show .sponsor-modal { transform: scale(1) translateY(0); }
-    .sponsor-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--scalar-border-color); }
-    .sponsor-modal-title { font-size: 18px; font-weight: 600; color: var(--scalar-color-1); margin: 0; }
-    .sponsor-close-btn { background: transparent; border: none; color: var(--scalar-color-3); cursor: pointer; padding: 4px; border-radius: 6px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
-    .sponsor-close-btn:hover { background: var(--scalar-background-2); color: var(--scalar-color-1); }
-    .sponsor-modal-body { padding: 20px; }
-    .sponsor-card { border-radius: 10px; overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; border: 1px solid var(--scalar-border-color); }
-    .sponsor-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); border-color: var(--scalar-color-accent); }
-    .sponsor-card-header { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--scalar-background-2); }
-    .sponsor-logo { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
+    .sponsor-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.65); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 100000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; }
+    .sponsor-modal { width: 90%; max-width: 620px; background: var(--scalar-background-1); border: 1px solid var(--scalar-border-color); border-radius: 16px; overflow: hidden; box-shadow: 0 32px 64px -12px rgba(0,0,0,0.6); font-family: var(--scalar-font); opacity: 0; transform: scale(0.85) translateY(40px); max-height: 85vh; display: flex; flex-direction: column; }
+    .sponsor-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; border-bottom: 1px solid var(--scalar-border-color); flex-shrink: 0; }
+    .sponsor-modal-title { font-size: 16px; font-weight: 700; color: var(--scalar-color-1); margin: 0; letter-spacing: 0.02em; text-transform: uppercase; }
+    .sponsor-close-btn { background: var(--scalar-background-2); border: 1px solid var(--scalar-border-color); color: var(--scalar-color-3); cursor: pointer; padding: 6px; border-radius: 8px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; }
+    .sponsor-close-btn:hover { background: var(--scalar-background-3, #333); color: var(--scalar-color-1); transform: scale(1.1); }
+    .sponsor-modal-body { padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; flex: 1; }
+    .sponsor-card { border-radius: 12px; overflow: hidden; cursor: pointer; border: 1px solid var(--scalar-border-color); opacity: 0; transform: translateY(24px); transition: box-shadow 0.25s, border-color 0.25s; }
+    .sponsor-card:hover { box-shadow: 0 12px 30px -5px rgba(0,0,0,0.35); border-color: var(--scalar-color-accent); }
+    .sponsor-card:hover .sponsor-banner-image { transform: scale(1.02); }
+    .sponsor-card-header { display: flex; align-items: center; gap: 12px; padding: 13px 16px; background: var(--scalar-background-2); border-bottom: 1px solid var(--scalar-border-color); }
+    .sponsor-logo { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; border: 2px solid var(--scalar-border-color); flex-shrink: 0; }
     .sponsor-logo img { width: 100%; height: 100%; object-fit: cover; }
-    .sponsor-name { font-size: 15px; font-weight: 600; margin: 0; color: var(--scalar-color-1); }
-    .sponsor-card-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-    .sponsor-banner-image { width: 100%; border-radius: 6px; display: block; object-fit: cover; max-height: 200px; }
-    .sponsor-modal-footer { padding: 12px 20px; text-align: center; border-top: 1px solid var(--scalar-border-color); background: var(--scalar-background-2); }
-    .sponsor-support-text { font-size: 13px; color: var(--scalar-color-3); margin: 0; }
+    .sponsor-info { display: flex; flex-direction: column; gap: 2px; }
+    .sponsor-name { font-size: 14px; font-weight: 700; margin: 0; color: var(--scalar-color-1); }
+    .sponsor-type { font-size: 11px; font-weight: 500; color: var(--scalar-color-accent); background: color-mix(in srgb, var(--scalar-color-accent) 15%, transparent); padding: 1px 7px; border-radius: 20px; display: inline-block; letter-spacing: 0.03em; }
+    .sponsor-card-body { padding: 0; overflow: hidden; }
+    .sponsor-banner-image { width: 100%; display: block; object-fit: cover; max-height: 210px; transition: transform 0.4s ease; }
+    .sponsor-modal-footer { padding: 13px 22px; text-align: center; border-top: 1px solid var(--scalar-border-color); background: var(--scalar-background-2); flex-shrink: 0; }
+    .sponsor-support-text { font-size: 12px; color: var(--scalar-color-3); margin: 0; letter-spacing: 0.01em; }
   `;
   const combinedCSS = preloaderCSS + bannerCSS + sponsorCSS;
   const { footer, clientButton } = scalarConfig.customBranding;
@@ -217,25 +218,32 @@ export function buildBrandingScript() {
       function initSponsorModal() {
         var cfg = ${JSON.stringify(adsConfig)};
         if (!cfg.enabled) return;
+        if (!cfg.sponsors || cfg.sponsors.length === 0) return;
         
+        // Build cards HTML for all sponsors
+        var cardsHTML = cfg.sponsors.map(function(s) {
+          return '<div class="sponsor-card" onclick="window.open(\\'' + s.targetUrl + '\\', \\'_blank\\')">' +
+            '<div class="sponsor-card-header">' +
+              '<div class="sponsor-logo"><img src="' + s.logoUrl + '" alt="' + s.name + '" onerror="this.style.display=\\'none\\'"></div>' +
+              '<div class="sponsor-info">' +
+                '<h4 class="sponsor-name">' + s.name + '</h4>' +
+                '<span class="sponsor-type">' + (s.type || 'Sponsor') + '</span>' +
+              '</div>' +
+            '</div>' +
+            '<div class="sponsor-card-body">' +
+              '<img src="' + s.bannerUrl + '" class="sponsor-banner-image" alt="' + s.name + ' banner">' +
+            '</div>' +
+          '</div>';
+        }).join('');
+
         var overlay = document.createElement('div');
         overlay.className = 'sponsor-modal-overlay';
         overlay.innerHTML = '<div class="sponsor-modal">' +
           '<div class="sponsor-modal-header">' +
             '<h3 class="sponsor-modal-title">' + cfg.title + '</h3>' +
-            '<button class="sponsor-close-btn" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>' +
+            '<button class="sponsor-close-btn" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>' +
           '</div>' +
-          '<div class="sponsor-modal-body">' +
-            '<div class="sponsor-card" onclick="window.open(\\'' + cfg.sponsor.targetUrl + '\\', \\'_blank\\')">' +
-              '<div class="sponsor-card-header">' +
-                '<div class="sponsor-logo"><img src="' + cfg.sponsor.logoUrl + '" alt="' + cfg.sponsor.name + '"></div>' +
-                '<h4 class="sponsor-name">' + cfg.sponsor.name + '</h4>' +
-              '</div>' +
-              '<div class="sponsor-card-body" style="background: ' + cfg.sponsor.bgColor + '; color: ' + cfg.sponsor.textColor + ';">' +
-                '<img src="' + cfg.sponsor.bannerUrl + '" class="sponsor-banner-image" alt="Banner">' +
-              '</div>' +
-            '</div>' +
-          '</div>' +
+          '<div class="sponsor-modal-body">' + cardsHTML + '</div>' +
           '<div class="sponsor-modal-footer">' +
             '<p class="sponsor-support-text">' + cfg.footerText + '</p>' +
           '</div>' +
@@ -243,14 +251,22 @@ export function buildBrandingScript() {
         
         document.body.appendChild(overlay);
         
-        var closeBtn = overlay.querySelector('.sponsor-close-btn');
-        closeBtn.addEventListener('click', function() {
-          overlay.classList.remove('show');
-          setTimeout(function() { overlay.remove(); }, 400);
-        });
+        function closeModal() {
+          anime.timeline({ easing: 'easeInQuad' })
+            .add({ targets: '.sponsor-card', translateY: [0, 16], opacity: [1, 0], duration: 200, delay: anime.stagger(50) })
+            .add({ targets: '.sponsor-modal', scale: [1, 0.9], opacity: [1, 0], duration: 280 }, '-=100')
+            .add({ targets: overlay, opacity: [1, 0], duration: 250, complete: function() { overlay.remove(); } }, '-=200');
+        }
+
+        overlay.querySelector('.sponsor-close-btn').addEventListener('click', closeModal);
 
         setTimeout(function() {
-          overlay.classList.add('show');
+          // 1. Fade in overlay
+          anime({ targets: overlay, opacity: [0, 1], duration: 400, easing: 'easeOutQuad', begin: function() { overlay.style.pointerEvents = 'auto'; } });
+          // 2. Elastic pop-in for modal box
+          anime({ targets: '.sponsor-modal', scale: [0.85, 1], translateY: [40, 0], opacity: [0, 1], duration: 700, easing: 'easeOutElastic(1, 0.7)' });
+          // 3. Staggered slide-up for cards
+          anime({ targets: '.sponsor-card', translateY: [24, 0], opacity: [0, 1], duration: 500, delay: anime.stagger(120, { start: 250 }), easing: 'easeOutExpo' });
         }, cfg.delayMs);
       }
 
