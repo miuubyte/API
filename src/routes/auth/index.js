@@ -1,5 +1,5 @@
 import { createRoute, z } from '@hono/zod-openapi'
-import { getApiKeyInfo } from '../../configs/apiKeys.js'
+import { apiKeys } from '../../configs/apiKeys.js'
 import { ErrorSchema, RateLimitSchema, UnauthorizedSchema, ForbiddenSchema } from '../../configs/app.js'
 
 const KeyStatusResponseSchema = z.object({
@@ -20,8 +20,8 @@ export const keyStatusRoute = createRoute({
     security: [{ ApiKeyAuth: [] }],
     request: {
         headers: z.object({
-            'x-api-key': z.string().openapi({
-                description: 'The API Key to check',
+            'x-api-key': z.string().optional().openapi({
+                description: 'The API Key to check (can also be passed via query as apikey)',
                 example: 'your_api_key_here'
             })
         })
@@ -71,8 +71,21 @@ export const keyStatusRoute = createRoute({
 })
 
 export const keyStatusHandler = (c) => {
-    const apiKey = c.req.header('x-api-key')
-    const keyInfo = getApiKeyInfo(apiKey)
+    const apiKey = c.req.header('x-api-key') || c.req.query('apikey') || c.req.query('apiKey');
+    
+    if (!apiKey) {
+        // Return default guest config if no API key provided
+        return c.json({
+            success: true,
+            key: 'Guest',
+            type: 'Default',
+            limit: 100,
+            description: 'Default guest rate limit',
+            owner: 'Guest User'
+        }, 200)
+    }
+
+    const keyInfo = apiKeys.find(k => k.key === apiKey)
 
     if (!keyInfo) {
         return c.json({

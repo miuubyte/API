@@ -47,15 +47,19 @@ export function buildBrandingScript() {
         targets: '.m-path', 
         strokeDashoffset: [anime.setDashoffset, 0], 
         easing: 'easeInOutQuart', 
-        duration: 1200, 
-        delay: anime.stagger(200) 
+        duration: 1000, 
+        delay: anime.stagger(100) 
       })
       .add({ 
         targets: '.m-path', 
         fill: ['#ffffff00', 'var(--scalar-color-accent)'], 
-        duration: 600, 
+        duration: 800, 
         easing: 'easeOutQuad', 
-        offset: '-=400' 
+        offset: '-=200',
+        update: function(anim) {
+          var paths = document.querySelectorAll('.m-path');
+          paths.forEach(p => p.style.filter = 'drop-shadow(0 0 10px var(--scalar-color-accent))');
+        }
       })
       .add({ 
         targets: '.m-loader-text', 
@@ -63,18 +67,18 @@ export function buildBrandingScript() {
         translateY: [20, 0], 
         duration: 800, 
         easing: 'easeOutExpo', 
-        offset: '-=400',
+        offset: '-=600',
         begin: function(anim) {
           var textWrapper = document.querySelector('.m-loader-text');
-          textWrapper.innerHTML = textWrapper.textContent.replace(/\\\\S/g, "<span class='letter' style='display:inline-block'>$&</span>");
+          textWrapper.innerHTML = textWrapper.textContent.replace(/\\S/g, "<span class='letter' style='display:inline-block'>$&</span>");
           anime({
             targets: '.m-loader-text .letter',
             translateY: [40,0],
             translateZ: 0,
             opacity: [0,1],
             easing: "easeOutExpo",
-            duration: 1200,
-            delay: (el, i) => 500 + 30 * i
+            duration: 1000,
+            delay: (el, i) => 200 + 30 * i
           });
         }
       });
@@ -91,7 +95,7 @@ export function buildBrandingScript() {
           }
         });
 
-        var configTitles = document.querySelectorAll('.text-base.font-medium.text-c-1');
+        var configTitles = document.querySelectorAll('span.text-base.font-medium.text-c-1');
         configTitles.forEach(function(el) {
           if (el.innerText.includes('Scalar Configuration')) {
             el.innerText = 'Configuration';
@@ -125,7 +129,49 @@ export function buildBrandingScript() {
         }
       }
 
+      function initRateLimitBanner() {
+        if (document.getElementById('rate-limit-banner')) return;
+        var rateLimitBanner = document.createElement('div');
+        rateLimitBanner.id = 'rate-limit-banner';
+        rateLimitBanner.style.cssText = 'position:fixed;bottom:20px;left:20px;background:var(--scalar-background-2);color:var(--scalar-color-1);padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;z-index:9999;border:1px solid var(--scalar-border-color);box-shadow:0 4px 12px rgba(0,0,0,0.2);font-family:var(--scalar-font);transition:all 0.3s ease;display:flex;align-items:center;gap:8px;';
+        rateLimitBanner.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Rate Limit: <span id="rl-val">Checking...</span>';
+        document.body.appendChild(rateLimitBanner);
+
+        var originalFetch = window.fetch;
+        window.fetch = async function() {
+            var response = await originalFetch.apply(this, arguments);
+            var remaining = response.headers.get('X-RateLimit-Remaining');
+            var limit = response.headers.get('X-RateLimit-Limit');
+            if (remaining && limit) {
+                var rlVal = document.getElementById('rl-val');
+                if (rlVal) {
+                    if (limit === 'UNLIMITED') {
+                        rlVal.innerHTML = 'Unlimited <span style="color:#4ade80">🚀</span>';
+                    } else {
+                        rlVal.innerText = remaining + ' / ' + limit;
+                        if (parseInt(remaining) < (parseInt(limit) * 0.2)) {
+                            rlVal.style.color = '#f87171';
+                        } else {
+                            rlVal.style.color = 'var(--scalar-color-1)';
+                        }
+                    }
+                }
+            }
+            return response;
+        };
+
+        originalFetch('/api/auth/check').then(function(r) {
+            var remaining = r.headers.get('X-RateLimit-Remaining');
+            var limit = r.headers.get('X-RateLimit-Limit');
+            if (remaining && limit) {
+                var rlVal = document.getElementById('rl-val');
+                if (rlVal) rlVal.innerHTML = limit === 'UNLIMITED' ? 'Unlimited <span style="color:#4ade80">🚀</span>' : (remaining + ' / ' + limit);
+            }
+        }).catch(function(){});
+      }
+
       customizeUI();
+      initRateLimitBanner();
       var observer = new MutationObserver(customizeUI);
       observer.observe(document.body, { childList: true, subtree: true });
     }

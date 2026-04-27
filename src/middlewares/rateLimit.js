@@ -28,16 +28,17 @@ export const rateLimiter = () => {
         if (ip === '::1') ip = '127.0.0.1'
         if (ip.startsWith('::ffff:')) ip = ip.replace('::ffff:', '')
 
-        if (banList.length > 0 && banList.includes(ip)) {
+        if (banList.some(b => b === ip || b.ip === ip)) {
+            const banInfo = typeof banList[0] === 'object' ? banList.find(b => b.ip === ip) : null;
             return c.json({
                 success: false,
                 status: 403,
                 error: 'Forbidden',
-                message: 'Akses ditolak.'
+                message: banInfo?.reason ? `Your IP has been banned from accessing this API. Reason: ${banInfo.reason}` : 'Your IP has been banned from accessing this API.'
             }, 403)
         }
 
-        const apiKey = headers['x-api-key']
+        const apiKey = headers['x-api-key'] || c.req.query('apikey') || c.req.query('apiKey');
         const keyData = apiKeys.find(k => k.key === apiKey)
 
         let id = apiKey && keyData ? `key:${apiKey}` : `ip:${ip}`
@@ -84,7 +85,7 @@ export const rateLimiter = () => {
                 success: false,
                 status: 429,
                 error: 'Too Many Requests',
-                message: `Limit tercapai. Coba lagi dalam ${resetSeconds} detik.`,
+                message: `Rate limit exceeded. Please try again in ${resetSeconds} seconds.`,
                 retryAfter: resetSeconds
             }, 429)
         }
