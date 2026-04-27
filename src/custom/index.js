@@ -70,7 +70,9 @@ export function buildBrandingScript() {
         offset: '-=600',
         begin: function(anim) {
           var textWrapper = document.querySelector('.m-loader-text');
-          textWrapper.innerHTML = textWrapper.textContent.replace(/\\S/g, "<span class='letter' style='display:inline-block'>$&</span>");
+          textWrapper.innerHTML = textWrapper.textContent.split('').map(function(c) {
+            return "<span class='letter' style='display:inline-block'>" + (c === ' ' ? '&nbsp;' : c) + "</span>";
+          }).join('');
           anime({
             targets: '.m-loader-text .letter',
             translateY: [40,0],
@@ -133,7 +135,7 @@ export function buildBrandingScript() {
           var rateLimitBtn = document.createElement('div');
           rateLimitBtn.id = 'rate-limit-btn';
           rateLimitBtn.className = 'text-c-1 mr-2 flex min-h-7 min-w-7 items-center rounded-lg border px-2 py-1 group-last:mr-0 xl:border-none no-underline hover:bg-b-2';
-          rateLimitBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" class="size-3 text-current"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span class="ml-1 empty:hidden" id="rl-val" style="font-size: 13px; font-weight: 600;">Checking...</span>';
+          rateLimitBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" class="size-3 text-current"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span class="ml-1 empty:hidden" id="rl-val" style="font-size: 13px; font-weight: 600;">RATE LIMIT: Checking...</span>';
           emailBtn.parentNode.insertBefore(rateLimitBtn, emailBtn);
           
           window.fetch('/api/auth/check', { method: 'HEAD' }).catch(function(){});
@@ -150,9 +152,9 @@ export function buildBrandingScript() {
                 var rlVal = document.getElementById('rl-val');
                 if (rlVal) {
                     if (limit === 'UNLIMITED') {
-                        rlVal.innerHTML = 'Unlimited <span style="color:#4ade80">🚀</span>';
+                        rlVal.innerText = 'RATE LIMIT: Unlimited';
                     } else {
-                        rlVal.innerText = remaining + ' / ' + limit;
+                        rlVal.innerText = 'RATE LIMIT: ' + remaining;
                         if (parseInt(remaining) < (parseInt(limit) * 0.2)) {
                             rlVal.style.color = '#f87171';
                         } else {
