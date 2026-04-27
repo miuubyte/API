@@ -122,51 +122,99 @@ npm run dev:cluster
 
 ## API Reference
 
-### Anime and Media Services
-Endpoints for comprehensive media metadata retrieval.
-
-| Endpoint | Method | Parameter | Description |
-| :--- | :---: | :--- | :--- |
-| `/api/anime/home` | `GET` | *None* | Global featured content and latest updates. |
-| `/api/anime/search` | `GET` | `q` | Full-text search across the media database. |
-| `/api/anime/detail/{slug}` | `GET` | `slug` | Comprehensive metadata for a single entry. |
-| `/api/anime/episode/{slug}` | `GET` | `slug` | Direct streaming assets and mirror availability. |
-| `/api/anime/popular` | `GET` | *None* | High-engagement titles based on user traffic. |
-
 ### Infrastructure Monitoring
-System-level diagnostics and real-time health metrics.
 
 | Endpoint | Method | Description |
 | :--- | :---: | :--- |
 | `/api/stats` | `GET` | Detailed hardware metrics (CPU, RAM, Uptime, Network). |
-| `/api/auth/check` | `GET` | Authentication token validation and tier status. |
+| `/api/auth/check` | `GET` | Authentication token validation, tier status, and expiry info. |
+
+---
+
+## Security & Rate Limiting
+
+### Per-Endpoint Rate Limits
+
+Override the global key limit for specific routes using `endpointLimits` in `src/configs/apiKeys.js`:
+
+```javascript
+endpointLimits: {
+    '/api/stats': { limit: 10,  windowMs: 60 * 1000 },  // 10 req/min
+    '/api/auth':  { limit: 30,  windowMs: 60 * 1000 },  // 30 req/min
+}
+```
+
+Priority: **per-endpoint override** → key global limit → guest config.
+
+### API Key Expiry
+
+Set `expiresAt` to an ISO 8601 date string. The key is rejected automatically after this date.
+
+```javascript
+expiresAt: '2026-12-31T23:59:59Z'  // expires end of 2026
+expiresAt: null                     // no expiry
+```
+
+### API Key Scopes / Permissions
+
+Restrict a key to only certain route prefixes. An empty array means full access.
+
+```javascript
+scopes: []                             // full access
+scopes: ['/api/stats', '/api/auth']   // only these routes
+```
+
+Requests to unlisted routes will receive a `403 Forbidden` response.
+
+### Auto IP Ban
+
+Configured in `src/configs/apiKeys.js` under `autoBanConfig`:
+
+```javascript
+export const autoBanConfig = {
+    enabled: true,
+    threshold: 1000,       // requests before ban
+    windowMs: 60 * 1000,   // per 1 minute
+    reason: 'Automated ban: exceeded request threshold'
+}
+```
+
+IPs exceeding 1000 requests/minute are automatically added to `banList` and blocked with a `403`.
+
+### Request Logging
+
+All API requests are automatically logged to `logs/YYYY-MM-DD.log` in newline-delimited JSON:
+
+```json
+{"ts":"2026-04-27T12:00:00.000Z","ip":"1.2.3.4","key":"abc123","path":"/api/stats","method":"GET","status":200}
+```
+
+> [!NOTE]
+> The `logs/` directory is excluded from Git via `.gitignore`. Logs rotate automatically by date.
 
 ---
 
 ## Integration Example
 
 ### Standard API Request
+
 Pass your `x-api-key` in the header or as a query parameter (`?apikey=`) to authenticate.
 
 ```bash
-curl -X GET "http://localhost:4000/api/anime/search?q=query" \
+curl -X GET "http://localhost:4000/api/stats" \
      -H "x-api-key: your_api_token" \
      -H "Content-Type: application/json"
 ```
 
 ### Standard JSON Response
+
 All responses follow a consistent, predictable JSON schema.
 
 ```json
 {
   "success": true,
   "status": 200,
-  "data": {
-    "title": "Example Media",
-    "slug": "example-media",
-    "status": "Ongoing",
-    "episodes": 12
-  }
+  "data": { ... }
 }
 ```
 
