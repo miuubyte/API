@@ -31,14 +31,14 @@ Robust security layer providing mandatory header validation, CORS policy enforce
 
 ---
 
-## 🚀 Deployment Guide
+## Deployment Guide
 
-### 📋 Prerequisites
+### Prerequisites
 Ensure your environment meets the following requirements:
 - **Node.js** `v20.0.0` or higher
 - **npm** `v10.0.0` or higher
 
-### 📦 Installation
+### Installation
 Clone the repository and install the dependencies:
 ```bash
 git clone https://github.com/miuubyte/API.git
@@ -46,7 +46,7 @@ cd API
 npm install
 ```
 
-### ⚙️ Execution Profiles
+### Execution Profiles
 
 > [!TIP]
 > Use **Cluster Performance Mode** for production environments to utilize all CPU cores and maximize throughput.
@@ -63,9 +63,9 @@ npm run dev:cluster
 
 ---
 
-## 📚 API Reference
+## API Reference
 
-### 🎬 Anime and Media Services
+### Anime and Media Services
 Endpoints for comprehensive media metadata retrieval.
 
 | Endpoint | Method | Parameter | Description |
@@ -76,7 +76,7 @@ Endpoints for comprehensive media metadata retrieval.
 | `/api/anime/episode/{slug}` | `GET` | `slug` | Direct streaming assets and mirror availability. |
 | `/api/anime/popular` | `GET` | *None* | High-engagement titles based on user traffic. |
 
-### 📊 Infrastructure Monitoring
+### Infrastructure Monitoring
 System-level diagnostics and real-time health metrics.
 
 | Endpoint | Method | Description |
@@ -86,7 +86,7 @@ System-level diagnostics and real-time health metrics.
 
 ---
 
-## ⚡ Integration Example
+## Integration Example
 
 ### Standard API Request
 Pass your `x-api-key` in the header or as a query parameter (`?apikey=`) to authenticate.
@@ -116,6 +116,6 @@ All responses follow a consistent, predictable JSON schema.
 ---
 
 <div align="center">
-  <b>Developed by MiuuPS</b><br>
+  <b>Developed by miuubyte</b><br>
   <i>Built with ❤️ for speed, reliability, and developer experience.</i>
 </div>
